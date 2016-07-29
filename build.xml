@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<project name="joni-s3upload" default="jar" basedir="..">
+	
+	<property name="wowza.lib.dir" value="lib"/>
+	<property name="jar.filename" value="joni-s3upload.jar"/>
+	<property name="core.build.dir" value="bin"/>
+
+	<target name="jar">
+		<jar jarfile="${wowza.lib.dir}/${jar.filename}">
+			<fileset dir="${core.build.dir}"/>
+		</jar>
+	</target>
+	
+</project>
