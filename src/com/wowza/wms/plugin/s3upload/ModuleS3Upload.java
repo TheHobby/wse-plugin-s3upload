@@ -77,7 +77,7 @@ public class ModuleS3Upload extends ModuleBase
 		private File renameFileForJoni(IMediaStream stream, File file) {
 			long endTime = System.currentTimeMillis();
 			long startTime = endTime - stream.getElapsedTime().getTime();
-			File renamedFile = new File(file.getPath().replace(".mp4", startTime + "-" + endTime + ".mp4"));
+			File renamedFile = new File(file.getPath().replace(".mp4", "." + startTime + "-" + endTime + ".mp4"));
 
 			file.renameTo(renamedFile);
 
