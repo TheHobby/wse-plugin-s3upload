@@ -64,6 +64,7 @@ public class ModuleS3Upload extends ModuleBase
 					}
 				}
 			}
+			logger.info("Initializing upload for " + mediaName);
 			Upload upload = transferManager.upload(bucketName, mediaName, file);
 			upload.addProgressListener(new ProgressListener(mediaName));
 		}
