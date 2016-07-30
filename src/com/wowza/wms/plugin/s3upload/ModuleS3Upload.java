@@ -23,11 +23,12 @@ import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.internal.S3ProgressListener;
 import com.wowza.util.StringUtils;
-import com.wowza.wms.application.*;
+import com.wowza.wms.application.IApplicationInstance;
+import com.wowza.wms.application.WMSProperties;
 import com.wowza.wms.logging.WMSLogger;
 import com.wowza.wms.logging.WMSLoggerFactory;
 import com.wowza.wms.logging.WMSLoggerIDs;
-import com.wowza.wms.module.*;
+import com.wowza.wms.module.ModuleBase;
 import com.wowza.wms.stream.IMediaStream;
 import com.wowza.wms.stream.IMediaWriterActionNotify;
 
