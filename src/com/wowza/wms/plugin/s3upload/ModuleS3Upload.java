@@ -40,6 +40,8 @@ public class ModuleS3Upload extends ModuleBase
 		@Override
 		public void onWriteComplete(IMediaStream stream, File file)
 		{
+			file = renameFileForJoni(stream, file);
+
 			String mediaName = file.getPath().replace(appInstance.getStreamStorageDir(), "");
 			if(mediaName.startsWith("/"))
 				mediaName = mediaName.substring(1);
@@ -71,12 +73,22 @@ public class ModuleS3Upload extends ModuleBase
 		{
 			// no-op
 		}
+
+		private File renameFileForJoni(IMediaStream stream, File file) {
+			long endTime = System.currentTimeMillis();
+			long startTime = endTime - stream.getElapsedTime().getTime();
+			File renamedFile = new File(file.getPath().replace(".mp4", startTime + "-" + endTime + ".mp4"));
+
+			file.renameTo(renamedFile);
+
+			return renamedFile;
+		}
 	}
-	
+
 	private class ProgressListener implements S3ProgressListener
 	{
 		final String mediaName;
-		
+
 		ProgressListener(String mediaName)
 		{
 			this.mediaName = mediaName;
@@ -103,11 +115,11 @@ public class ModuleS3Upload extends ModuleBase
 						file.delete();
 					}
 					break;
-					
+
 				case TRANSFER_FAILED_EVENT:
 					logger.warn(MODULE_NAME + ".ProgressListener [" + appInstance.getContextStr() + "/" + this.mediaName + "] transfer failed", WMSLoggerIDs.CAT_application, WMSLoggerIDs.EVT_comment);
 					break;
-					
+
 				default:
 					break;
 				}
@@ -153,55 +165,55 @@ public class ModuleS3Upload extends ModuleBase
 				}
 			});
 		}
-		
+
 	}
-	
+
 	public static final String MODULE_NAME = "ModuleS3Upload";
 	public static final String PROP_NAME_PREFIX = "s3Upload";
-	
+
 	private WMSLogger logger = null;
 	private IApplicationInstance appInstance = null;
-	
+
 	private TransferManager transferManager = null;
 	private String accessKey = null;
 	private String secretKey = null;
 	private String bucketName = null;
-	
+
 	private boolean resumeUploads = true;
 	private boolean deleteOriginalFiles = false;
-	
+
 	private Object lock = new Object();
 
 	public void onAppStart(IApplicationInstance appInstance)
 	{
 		this.logger = WMSLoggerFactory.getLoggerObj(appInstance);
 		this.appInstance = appInstance;
-		
+
 		WMSProperties props = appInstance.getProperties();
 		this.accessKey = props.getPropertyStr("s3UploadAccessKey", this.accessKey);
 		this.secretKey = props.getPropertyStr("s3UploadSecretKey", this.secretKey);
 		this.bucketName = props.getPropertyStr("s3UploadBucketName", this.bucketName);
 		this.resumeUploads = props.getPropertyBoolean("s3UploadResumeUploads", this.resumeUploads);
 		this.deleteOriginalFiles = props.getPropertyBoolean("s3UploadDeletOriginalFiles", this.deleteOriginalFiles);
-		
+
 		if(StringUtils.isEmpty(accessKey) || StringUtils.isEmpty(secretKey))
 		{
 			logger.warn(MODULE_NAME + ".onAppStart: [" + appInstance.getContextStr() + "] missing S3 credentials", WMSLoggerIDs.CAT_application, WMSLoggerIDs.EVT_comment);
 			return;
 		}
-		
+
 		AmazonS3 s3Client = new AmazonS3Client(new BasicAWSCredentials(this.accessKey, this.secretKey));
-		
+
 		if (StringUtils.isEmpty(bucketName) || !s3Client.doesBucketExist(bucketName))
 		{
 			logger.warn(MODULE_NAME + ".onAppStart: [" + appInstance.getContextStr() + "] missing S3 bucket: " + bucketName, WMSLoggerIDs.CAT_application, WMSLoggerIDs.EVT_comment);
 			return;
 		}
-		
+
 		logger.info(MODULE_NAME + ".onAppStart [" + appInstance.getContextStr() + "] S3 Bucket Name: " + this.bucketName + ", Resume Uploads: " + this.resumeUploads + ", Delete Original Files: " + this.deleteOriginalFiles, WMSLoggerIDs.CAT_application, WMSLoggerIDs.EVT_comment);
 		transferManager = new TransferManager(s3Client);
 		resumeUploads();
-		
+
 		appInstance.addMediaWriterListener(new WriteListener());
 	}
 
@@ -220,7 +232,7 @@ public class ModuleS3Upload extends ModuleBase
 			transferManager.abortMultipartUploads(bucketName, new Date());
 			return;
 		}
-		
+
 		File storageDir = new File(appInstance.getStreamStorageDir());
 		File[] files = storageDir.listFiles(new FilenameFilter() {
 
@@ -230,13 +242,13 @@ public class ModuleS3Upload extends ModuleBase
 				return name.toLowerCase().endsWith(".upload");
 			}
 		});
-		
+
 		for(File file : files)
 		{
 			String mediaName = file.getPath().replace(storageDir.getPath(), "");
 			if(mediaName.startsWith("/"))
 				mediaName = mediaName.substring(1);
-			
+
 			mediaName = mediaName.substring(0, mediaName.indexOf(".upload"));
 			Upload upload = null;
 			FileInputStream fis = null;
